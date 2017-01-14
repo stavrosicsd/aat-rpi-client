@@ -3,7 +3,7 @@ import json
 import pifacecad
 import time
 
-response = requests.get('https://ase2016-cb66d.firebaseio.com/greetings.json')
+response = requests.get('https://ase2016-cb66d.firebaseio.com/groups.json')
 root = json.loads(response.text)
 
 i = 0
@@ -12,18 +12,18 @@ mode = "Attendance"
 
 def change_group(event):
     global i
-    i = (i + 1) % len(root['greeting'])
-    greeting = root['greeting'][i]['content']
+    i = (i + 1) % len(root['group'])
+    group = get_group(i)
 
-    if len(greeting) > 16:
-        greeting = greeting[:16]
+    if len(group) > 16:
+        group = group[:16]
 
     event.chip.lcd.clear()
-    event.chip.lcd.write(greeting)
+    event.chip.lcd.write(group)
 
 def select_group(event):
     global selectedGroup
-    selectedGroup = root['greeting'][i]['content']
+    selectedGroup = get_group(i)
     event.chip.lcd.clear()
     event.chip.lcd.write("Selected Group: \n" + selectedGroup)
 
@@ -35,16 +35,19 @@ def change_mode(event):
         mode = "Attendance"
     event.chip.lcd.clear()
     event.chip.lcd.write("Selected Mode: \n" + mode)
-    time.sleep(3)
+    time.sleep(1)
     event.chip.lcd.clear()
     event.chip.lcd.write("Selected Group: \n" + selectedGroup)
 
+def get_group(index):
+    return root['group'][index]['title']
+
 cad = pifacecad.PiFaceCAD()
 cad.lcd.backlight_on()
-cad.lcd.write(root['greeting'][i]['content'])
+cad.lcd.write(get_group(i))
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 listener.register(0, pifacecad.IODIR_FALLING_EDGE, change_group)
 listener.register(1, pifacecad.IODIR_FALLING_EDGE, select_group)
-listener.register(4, pifacecad.IODIR_FALLING_EDGE, change_mode)
+listener.register(2, pifacecad.IODIR_FALLING_EDGE, change_mode)
 listener.activate()
